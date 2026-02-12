@@ -17,6 +17,10 @@ const skillDescriptionEl = document.querySelector('#skill-description');
 const skillPreviewEl = document.querySelector('#skill-preview');
 const skillChildrenMetaEl = document.querySelector('#skill-children-meta');
 const skillChildrenEl = document.querySelector('#skill-children');
+const skillFileStatsEl = document.querySelector('#skill-file-stats');
+const skillFileTreeEl = document.querySelector('#skill-file-tree');
+const skillContentDrawerEl = document.querySelector('#skill-content-drawer');
+const skillContentEl = document.querySelector('#skill-content');
 const openSkillBtnEl = document.querySelector('#open-skill-btn');
 
 const state = {
@@ -117,9 +121,59 @@ function setEmptySkillDetail(message = 'Click a skill to view details.') {
   skillPathEl.textContent = '-';
   skillDescriptionEl.textContent = message;
   skillPreviewEl.textContent = '';
+  skillFileStatsEl.textContent = '';
+  skillFileTreeEl.innerHTML = '';
   skillChildrenMetaEl.textContent = '';
   skillChildrenEl.innerHTML = '';
+  skillContentDrawerEl.style.display = 'none';
+  skillContentEl.textContent = '';
   openSkillBtnEl.disabled = true;
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function renderFileTree(fileTree) {
+  skillFileTreeEl.innerHTML = '';
+  if (!fileTree || fileTree.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'meta';
+    empty.textContent = 'No files in this skill directory.';
+    skillFileTreeEl.append(empty);
+    return;
+  }
+
+  const sorted = [...fileTree].sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
+    return a.path.localeCompare(b.path);
+  });
+
+  for (const entry of sorted) {
+    const row = document.createElement('div');
+    row.className = 'file-row';
+
+    const depth = entry.path.split('/').length - 1;
+    row.style.paddingLeft = `${depth * 16 + 8}px`;
+
+    const name = document.createElement('span');
+    name.className = 'file-name';
+    const baseName = entry.path.split('/').pop();
+    name.textContent = entry.type === 'directory' ? baseName + '/' : baseName;
+
+    row.append(name);
+
+    if (entry.type === 'file') {
+      const size = document.createElement('span');
+      size.className = 'file-size';
+      size.textContent = formatSize(entry.size);
+      row.append(size);
+    }
+
+    skillFileTreeEl.append(row);
+  }
 }
 
 function renderSkillDetail(detail) {
@@ -135,8 +189,11 @@ function renderSkillDetail(detail) {
   if (!detail.exists) {
     skillDescriptionEl.textContent = 'Skill directory is missing.';
     skillPreviewEl.textContent = '';
+    skillFileStatsEl.textContent = '';
+    skillFileTreeEl.innerHTML = '';
     skillChildrenMetaEl.textContent = '';
     skillChildrenEl.innerHTML = '';
+    skillContentDrawerEl.style.display = 'none';
     openSkillBtnEl.disabled = true;
     return;
   }
@@ -144,8 +201,11 @@ function renderSkillDetail(detail) {
   if (!detail.isDirectory) {
     skillDescriptionEl.textContent = 'Skill path exists but is not a directory.';
     skillPreviewEl.textContent = '';
+    skillFileStatsEl.textContent = '';
+    skillFileTreeEl.innerHTML = '';
     skillChildrenMetaEl.textContent = '';
     skillChildrenEl.innerHTML = '';
+    skillContentDrawerEl.style.display = 'none';
     openSkillBtnEl.disabled = true;
     return;
   }
@@ -154,26 +214,34 @@ function renderSkillDetail(detail) {
   skillDescriptionEl.textContent = description;
   skillPreviewEl.textContent = detail.preview ? detail.preview : '';
 
+  const fileParts = [];
+  if (detail.fileCount !== undefined) fileParts.push(`${detail.fileCount} files`);
+  if (detail.directoryCount) fileParts.push(`${detail.directoryCount} dirs`);
+  if (detail.totalSizeFormatted) fileParts.push(detail.totalSizeFormatted);
+  skillFileStatsEl.textContent = fileParts.length > 0 ? fileParts.join(' · ') : '';
+
+  renderFileTree(detail.fileTree);
+
   skillChildrenEl.innerHTML = '';
   if (detail.childDirectoryCount > 0) {
     skillChildrenMetaEl.textContent = `${detail.childDirectoryCount} child directories`;
 
-    const previewChildren = detail.childDirectories.slice(0, 8);
-    for (const childName of previewChildren) {
+    for (const childName of detail.childDirectories) {
       const chip = document.createElement('span');
       chip.className = 'chip';
       chip.textContent = childName;
       skillChildrenEl.append(chip);
     }
-
-    if (detail.childDirectoryCount > previewChildren.length) {
-      const extraChip = document.createElement('span');
-      extraChip.className = 'chip';
-      extraChip.textContent = `+${detail.childDirectoryCount - previewChildren.length} more`;
-      skillChildrenEl.append(extraChip);
-    }
   } else {
-    skillChildrenMetaEl.textContent = 'No child directories';
+    skillChildrenMetaEl.textContent = '';
+  }
+
+  if (detail.skillFileContent) {
+    skillContentDrawerEl.style.display = '';
+    skillContentEl.textContent = detail.skillFileContent;
+  } else {
+    skillContentDrawerEl.style.display = 'none';
+    skillContentEl.textContent = '';
   }
 
   openSkillBtnEl.disabled = state.running;
@@ -222,8 +290,12 @@ async function loadSkillDetail(directoryPath, skillName) {
   skillPathEl.textContent = `${shortPath(directoryPath)}/${skillName}`;
   skillDescriptionEl.textContent = 'Loading skill details...';
   skillPreviewEl.textContent = '';
+  skillFileStatsEl.textContent = '';
+  skillFileTreeEl.innerHTML = '';
   skillChildrenMetaEl.textContent = '';
   skillChildrenEl.innerHTML = '';
+  skillContentDrawerEl.style.display = 'none';
+  skillContentEl.textContent = '';
   openSkillBtnEl.disabled = true;
 
   try {

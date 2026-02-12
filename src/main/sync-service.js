@@ -156,6 +156,41 @@ function extractPreview(body) {
   return '';
 }
 
+function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+async function walkDirectory(dirPath, relativeTo) {
+  const results = [];
+
+  async function walk(currentPath) {
+    const entries = await readEntriesSafe(currentPath);
+    for (const entry of entries) {
+      if (shouldIgnore(entry.name)) continue;
+
+      const fullPath = path.join(currentPath, entry.name);
+      const relPath = path.relative(relativeTo, fullPath);
+
+      if (entry.isDirectory()) {
+        results.push({ name: entry.name, path: relPath, type: 'directory', size: 0 });
+        await walk(fullPath);
+      } else {
+        let size = 0;
+        try {
+          const stat = await fs.stat(fullPath);
+          size = stat.size;
+        } catch {}
+        results.push({ name: entry.name, path: relPath, type: 'file', size });
+      }
+    }
+  }
+
+  await walk(dirPath);
+  return results;
+}
+
 export function resolveUserPath(input) {
   if (!input || typeof input !== 'string') {
     return '';
@@ -293,10 +328,12 @@ export async function getSkillDetails({
   let description = '';
   let shortDescription = '';
   let preview = '';
+  let skillFileContent = '';
 
   if (hasSkillFile) {
     try {
       const rawSkillFile = await fs.readFile(skillFilePath, 'utf8');
+      skillFileContent = rawSkillFile;
       const parsed = parseSkillFrontmatter(rawSkillFile);
       title = parsed.name || skillName;
       description = parsed.description;
@@ -306,6 +343,11 @@ export async function getSkillDetails({
       preview = '';
     }
   }
+
+  const fileTree = await walkDirectory(skillPath, skillPath);
+  const files = fileTree.filter((f) => f.type === 'file');
+  const directories = fileTree.filter((f) => f.type === 'directory');
+  const totalSize = files.reduce((sum, f) => sum + f.size, 0);
 
   return {
     directoryPath: resolvedDirectory,
@@ -318,8 +360,14 @@ export async function getSkillDetails({
     description,
     shortDescription,
     preview,
+    skillFileContent,
     childDirectoryCount: childDirectories.length,
-    childDirectories
+    childDirectories,
+    fileTree,
+    fileCount: files.length,
+    directoryCount: directories.length,
+    totalSize,
+    totalSizeFormatted: formatFileSize(totalSize)
   };
 }
 
