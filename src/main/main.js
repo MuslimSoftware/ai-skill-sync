@@ -185,6 +185,8 @@ function buildTargetPreviewItems(targetSummaries) {
 }
 
 function showMainWindow() {
+  app.dock?.show();
+
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.show();
     mainWindow.focus();
@@ -390,6 +392,9 @@ function createWindow() {
     if (mainWindow === window) {
       mainWindow = null;
     }
+    if (BrowserWindow.getAllWindows().length === 0 && process.platform === 'darwin') {
+      app.dock?.hide();
+    }
   });
 
   return window;
@@ -431,7 +436,7 @@ app.whenReady().then(() => {
     return getSkillDetails({ directoryPath, skillName });
   });
 
-  mainWindow = createWindow();
+  app.dock?.hide();
   createTray();
   void refreshTrayInspect({
     source: DEFAULT_SOURCE,
