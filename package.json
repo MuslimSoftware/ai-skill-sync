@@ -1,0 +1,17 @@
+{
+  "name": "ai-skill-sync",
+  "version": "0.1.0",
+  "description": "Desktop app for one-click skill sync from .codex to .claude and agents.",
+  "private": true,
+  "type": "module",
+  "main": "src/main/main.js",
+  "scripts": {
+    "dev": "electron .",
+    "start": "electron .",
+    "check": "node --check src/main/main.js && node --check src/main/preload.cjs && node --check src/main/sync-service.js && node --check src/renderer/app.js",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0"
+  }
+}

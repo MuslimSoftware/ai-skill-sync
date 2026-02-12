@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Skill Sync</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient"></div>
+
+    <div class="app-shell">
+      <header class="hero animate-rise">
+        <p class="eyebrow">AI Skill Sync</p>
+        <h1>Skill directories and one-click mirror sync</h1>
+        <p class="lede">Pick a directory on the left to inspect its skills. Sync controls stay pinned above.</p>
+      </header>
+
+      <section class="card controls animate-rise" style="--delay: 80ms">
+        <div class="controls-row">
+          <button id="refresh-btn" class="ghost-btn" type="button">Refresh</button>
+          <button id="sync-btn" class="sync-btn" type="button">Sync Selected Targets</button>
+          <label class="toggle">
+            <input type="checkbox" id="prune-toggle" checked />
+            <span>Mirror mode (remove extras)</span>
+          </label>
+          <p id="selected-summary" class="meta selected">-</p>
+        </div>
+        <p id="status-line" class="status info">Ready.</p>
+      </section>
+
+      <main class="workspace animate-rise" style="--delay: 140ms">
+        <aside class="card directories">
+          <div class="pane-head">
+            <h2>Directories</h2>
+            <p class="meta" id="directory-summary">Loading...</p>
+          </div>
+          <div id="directory-list" class="directory-list"></div>
+        </aside>
+
+        <section class="card details">
+          <div class="pane-head detail-head">
+            <div>
+              <h2 id="detail-title">Directory skills</h2>
+              <p id="detail-path" class="path">-</p>
+              <p id="detail-meta" class="meta">Select a directory to inspect.</p>
+            </div>
+            <button id="open-dir-btn" class="ghost-btn" type="button" disabled>Open</button>
+          </div>
+          <div id="detail-skills" class="skill-list"></div>
+          <section class="skill-detail" id="skill-detail">
+            <div class="pane-head">
+              <h3 id="skill-name">Select a skill</h3>
+              <button id="open-skill-btn" class="ghost-btn" type="button" disabled>Open Skill</button>
+            </div>
+            <p id="skill-path" class="meta mono">-</p>
+            <p id="skill-description" class="meta">Click a skill to view details.</p>
+            <p id="skill-preview" class="skill-preview"></p>
+            <p id="skill-children-meta" class="meta"></p>
+            <div id="skill-children" class="chips"></div>
+          </section>
+        </section>
+      </main>
+
+      <details class="card activity-drawer animate-rise" style="--delay: 200ms">
+        <summary>Activity (optional)</summary>
+        <ul id="activity-log" class="activity"></ul>
+      </details>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
