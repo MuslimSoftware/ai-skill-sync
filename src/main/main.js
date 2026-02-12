@@ -218,9 +218,9 @@ function updateTrayMenu() {
       : 'Last refresh: pending';
 
   const menuTemplate = [
-    { label: 'AI Skill Sync', enabled: true },
-    { label: truncate(statusLine), enabled: true },
-    { label: checkedAtLine, enabled: true },
+    { label: 'AI Skill Sync', enabled: false },
+    { label: truncate(statusLine), enabled: false },
+    { label: checkedAtLine, enabled: false },
     { type: 'separator' },
     { label: sourceStatusLine(sourceSummary), enabled: false },
     { label: shortPath(trayState.source), enabled: false },
