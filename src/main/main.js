@@ -218,9 +218,9 @@ function updateTrayMenu() {
       : 'Last refresh: pending';
 
   const menuTemplate = [
-    { label: 'AI Skill Sync', enabled: false },
-    { label: truncate(statusLine), enabled: false },
-    { label: checkedAtLine, enabled: false },
+    { label: 'AI Skill Sync', enabled: true },
+    { label: truncate(statusLine), enabled: true },
+    { label: checkedAtLine, enabled: true },
     { type: 'separator' },
     { label: sourceStatusLine(sourceSummary), enabled: false },
     { label: shortPath(trayState.source), enabled: false },
@@ -260,6 +260,15 @@ function updateTrayMenu() {
           source: trayState.source,
           targets: trayState.targets
         }).catch(() => {});
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Launch at Login',
+      type: 'checkbox',
+      checked: app.getLoginItemSettings().openAtLogin,
+      click: (item) => {
+        app.setLoginItemSettings({ openAtLogin: item.checked });
       }
     },
     { type: 'separator' },
@@ -379,7 +388,7 @@ function createWindow() {
     minWidth: 920,
     minHeight: 620,
     title: 'AI Skill Sync',
-    backgroundColor: '#f3efe6',
+    backgroundColor: '#1a1a2e',
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -428,6 +437,15 @@ app.whenReady().then(() => {
 
     shell.showItemInFolder(targetPath);
     return { ok: true };
+  });
+
+  ipcMain.handle('skill-sync:get-login-item', () => {
+    return app.getLoginItemSettings();
+  });
+
+  ipcMain.handle('skill-sync:set-login-item', (_event, enabled) => {
+    app.setLoginItemSettings({ openAtLogin: !!enabled });
+    return app.getLoginItemSettings();
   });
 
   ipcMain.handle('skill-sync:skill-details', async (_event, payload = {}) => {

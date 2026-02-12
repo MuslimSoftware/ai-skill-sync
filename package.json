@@ -8,10 +8,31 @@
   "scripts": {
     "dev": "electron .",
     "start": "electron .",
+    "build": "electron-builder --mac",
+    "build:dir": "electron-builder --mac --dir",
     "check": "node --check src/main/main.js && node --check src/main/preload.cjs && node --check src/main/sync-service.js && node --check src/renderer/app.js",
     "test": "node --test"
   },
+  "build": {
+    "appId": "com.younesbenketira.ai-skill-sync",
+    "productName": "AI Skill Sync",
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": ["dmg", "zip"]
+    },
+    "dmg": {
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ]
+    },
+    "files": ["src/**/*"],
+    "directories": {
+      "output": "dist"
+    }
+  },
   "devDependencies": {
-    "electron": "^31.0.0"
+    "electron": "^31.0.0",
+    "electron-builder": "^25.1.8"
   }
 }

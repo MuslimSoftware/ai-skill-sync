@@ -22,6 +22,7 @@ const skillFileTreeEl = document.querySelector('#skill-file-tree');
 const skillContentDrawerEl = document.querySelector('#skill-content-drawer');
 const skillContentEl = document.querySelector('#skill-content');
 const openSkillBtnEl = document.querySelector('#open-skill-btn');
+const loginToggleEl = document.querySelector('#login-toggle');
 
 const state = {
   source: '',
@@ -617,6 +618,11 @@ async function init() {
     state.source = config.source;
     state.targets = config.targets;
 
+    if (typeof window.skillSync.getLoginItem === 'function') {
+      const loginSettings = await window.skillSync.getLoginItem();
+      loginToggleEl.checked = loginSettings.openAtLogin;
+    }
+
     await refreshInspect();
     pushLog('App ready. Source and target paths loaded.');
   } catch (error) {
@@ -625,6 +631,12 @@ async function init() {
     pushLog(`Initialization failed: ${message}`);
   }
 }
+
+loginToggleEl.addEventListener('change', () => {
+  if (typeof window.skillSync.setLoginItem === 'function') {
+    window.skillSync.setLoginItem(loginToggleEl.checked);
+  }
+});
 
 syncBtnEl.addEventListener('click', runSync);
 refreshBtnEl.addEventListener('click', () => {
