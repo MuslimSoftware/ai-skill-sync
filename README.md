@@ -1,24 +1,24 @@
-# AI Skill Sync
+# 🔄 AI Skill Sync
 
 A macOS menu bar app that mirrors skills from `~/.codex/skills` into `~/.claude/skills` and `~/agents` with one click. Codex is the source of truth — select your targets, hit sync, done.
 
-## Features
+## ✨ Features
 
-- One-click sync from `.codex` to selected targets
-- Clean mirror mode with optional pruning (removes target entries not in source)
-- Fast source/target scan with skill counts
-- Clickable skill list with per-skill details (`SKILL.md` metadata + preview)
-- macOS menu bar tray with compact skill info, quick sync, and target status
-- Activity log for each sync run
-- Secure Electron boundary using `contextIsolation` + preload IPC bridge
+- ⚡ **One-click sync** from `.codex` to selected targets
+- 🪞 **Clean mirror mode** with optional pruning (removes target entries not in source)
+- 🔍 **Fast source/target scan** with skill counts
+- 📄 **Clickable skill list** with per-skill details (`SKILL.md` metadata + preview)
+- 🖥️ **macOS menu bar tray** with compact skill info, quick sync, and target status
+- 📋 **Activity log** for each sync run
+- 🔒 **Secure Electron boundary** using `contextIsolation` + preload IPC bridge
 
-## Installation
+## 📦 Installation
 
 ### Download
 
 Grab the latest `.dmg` from [Releases](https://github.com/younesbenketira/ai-skill-sync/releases), open it, and drag **AI Skill Sync** into **Applications**.
 
-> macOS Gatekeeper will warn about an unidentified developer since the app isn't code-signed. Right-click the app and choose **Open** to bypass.
+> ⚠️ macOS Gatekeeper will warn about an unidentified developer since the app isn't code-signed. Right-click the app and choose **Open** to bypass.
 
 ### Build from source
 
@@ -31,7 +31,7 @@ npm run build
 
 The `.dmg` and `.zip` are written to `dist/`.
 
-## Development
+## 🛠️ Development
 
 ```bash
 npm install
@@ -46,13 +46,13 @@ npm run dev
 | `npm run check` | Syntax-check all source files |
 | `npm test` | Run Node test suite |
 
-## How It Works
+## ⚙️ How It Works
 
 1. On launch, the app scans `~/.codex/skills` for skill directories (each containing a `SKILL.md`).
 2. It compares source skills against configured targets (`~/.claude/skills`, `~/agents`).
 3. When you sync, each selected target is mirrored to match the source. With pruning enabled, skills in the target that no longer exist in the source are removed.
 
-## Architecture
+## 🏗️ Architecture
 
 ```
 src/
@@ -70,6 +70,6 @@ tests/
 
 The renderer has no direct filesystem or Node access. All operations go through a minimal IPC API exposed by `preload.cjs`, keeping the security boundary tight.
 
-## App Icon
+## 🎨 App Icon
 
 electron-builder uses a default icon. To add a custom one, place a 1024x1024 PNG at `build/icon.png` and rebuild.
