@@ -42,7 +42,7 @@ function normalizeTargets(targets) {
 }
 
 function shortPath(inputPath) {
-  return inputPath.replace(/^\/Users\/[^/]+/, '~');
+  return inputPath.replace(/^\/(?:Users|home)\/[^/]+/, '~');
 }
 
 function formatTime(value) {
@@ -61,17 +61,35 @@ function truncate(value, maxLength = 74) {
   return `${value.slice(0, maxLength - 3)}...`;
 }
 
-function createTrayIcon() {
-  const svg = [
-    '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">',
-    '<path d="M6 3.75a.75.75 0 0 1 .75-.75H15a.75.75 0 0 1 0 1.5H8.56l1.72 1.72a.75.75 0 0 1-1.06 1.06L6.22 4.28A.75.75 0 0 1 6 3.75Z" fill="black"/>',
-    '<path d="M12 14.25a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h6.44l-1.72-1.72a.75.75 0 0 1 1.06-1.06l3 3a.75.75 0 0 1 .22.53Z" fill="black"/>',
-    '</svg>'
-  ].join('');
+function createTrayIcon(state = 'idle') {
+  const isDarwin = process.platform === 'darwin';
+  const fill = isDarwin ? 'black' : { idle: 'white', syncing: '#58a6ff', error: '#f85149', success: '#3fb950' }[state] || 'white';
 
+  const icons = {
+    idle: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${fill}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>`,
+    syncing: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${fill}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>`,
+    error: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${fill}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    success: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${fill}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`
+  };
+
+  const svg = icons[state] || icons.idle;
   const image = nativeImage.createFromDataURL(`data:image/svg+xml,${encodeURIComponent(svg)}`);
-  image.setTemplateImage(true);
+  if (isDarwin) {
+    image.setTemplateImage(true);
+  }
   return image.resize({ width: 18, height: 18 });
+}
+
+function getTrayIconState() {
+  if (trayState.syncing) return 'syncing';
+  if (trayState.lastSyncError) return 'error';
+  if (trayState.lastSyncResult?.success) return 'success';
+  return 'idle';
+}
+
+function updateTrayIcon() {
+  if (!tray) return;
+  tray.setImage(createTrayIcon(getTrayIconState()));
 }
 
 function updateTrayTitle() {
@@ -200,6 +218,8 @@ function updateTrayMenu() {
   if (!tray) {
     return;
   }
+
+  updateTrayIcon();
 
   const sourceSummary = trayState.inspectResult?.source;
   const targetSummaries =
@@ -372,7 +392,12 @@ function createTray() {
     return tray;
   }
 
-  tray = new Tray(createTrayIcon());
+  tray = new Tray(createTrayIcon('idle'));
+  if (process.platform === 'linux') {
+    tray.on('click', () => {
+      tray.popUpContextMenu();
+    });
+  }
   tray.on('double-click', () => {
     showMainWindow();
   });
